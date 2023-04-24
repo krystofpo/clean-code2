@@ -1,50 +1,62 @@
 package cz.polansky.cleancode.naming.clean;
 
 import cz.polansky.cleancode.naming.Product;
-import cz.polansky.cleancode.naming.clean.Report;
 
 import java.time.LocalTime;
 import java.util.List;
 
 public class ReportService {
 
+    private LocalTime weekendHappyHourStart = LocalTime.of(10, 0);
+    private LocalTime weekendHappyHourEnd = LocalTime.of(12, 0);
+    private LocalTime workdayHappyHourStart = LocalTime.of(12, 30);
+    private LocalTime workdayHappyHourEnd = LocalTime.of(14, 0);
+    private String hamburger = "menu1445";
+    private String pizza = "menu1321";
+    private String juice = "drink1620";
+    private int minimumAmountOfSoldProduct = 5;
 
-    //TODO product id, co to je za  produkt, enum s hodnotou, nebo aspon konstanta, seznam produktu pro vikend a snzma produktu pro working days
-    //TODO konstanty por vikend, pojemnovani product.getday na day of week, peakhour pro vikend a pro working day do konstatny nebo jako Pair ci tuple
-    //TODO omezit uroven ifu
-    public Report countDiscountedProductsSoldInHappyHoursForEachDay(List<Product> products){
+
+    public Report countDiscountedProductsSoldInHappyHoursForEachDay(List<Product> products) {
         Report report = new Report();
-        for (Product product: products) {
+        for (Product product : products) {
             if (wasSoldDuringWeekendHappyHour(product)) {
-                    if (isOneOfWeekendDiscountedProducts(product.getProductId())){
-                        increaseSoldDiscountedProductsByOne(report, product);
-                    }
+                if (isOneOfWeekendDiscountedProducts(product.getProductId())) {
+                    increaseSoldDiscountedProductsByOne(report, product);
+                }
             } else {
-                if(wasSoldDuringWorkdayHappyHour(product)){
-                    if (isOneOfWorkdayDiscountedProducts(product)){
+                if (wasSoldDuringWorkdayHappyHour(product)) {
+                    if (isOneOfWorkdayDiscountedProducts(product)) {
                         increaseSoldDiscountedProductsByOne(report, product);
                     }
                 }
             }
         }
+        removeProductsBelowSoldTreshold(report);
         return report;
     }
 
+    private void removeProductsBelowSoldTreshold(Report report) {
+        report.getCountOfSoldProductsInEachDay().entrySet().stream()
+                .filter(entry -> entry.getValue() < minimumAmountOfSoldProduct)
+                .forEach(entry -> report.getCountOfSoldProductsInEachDay().remove(entry.getKey()));
+    }
+
     private boolean isOneOfWorkdayDiscountedProducts(Product product) {
-        return product.getProductId().equals("menu1445") || product.getProductId().equals("drink1620")
-                || product.getProductId().equals("menu1321");
+        return product.getProductId().equals(hamburger) || product.getProductId().equals(pizza)
+                || product.getProductId().equals(juice);
     }
 
     private boolean wasSoldDuringWorkdayHappyHour(Product product) {
-        return product.getDate().toLocalTime().isAfter(LocalTime.of(12, 30)) &&
-                product.getDate().toLocalTime().isBefore(LocalTime.of(14, 0));
+        return product.getDate().toLocalTime().isAfter(workdayHappyHourStart) &&
+                product.getDate().toLocalTime().isBefore(workdayHappyHourEnd);
     }
 
     private void increaseSoldDiscountedProductsByOne(Report report, Product product) {
         if (!report.getCountOfSoldProductsInEachDay().containsKey(product.getDate())){
-            report.getItems().put(product.getDate(), 1);
+            report.getCountOfSoldProductsInEachDay().put(product.getDate(), 1);
         } else {
-            report.getItems().put(product.getDate(), (report.getItems().get(product.getDate()) + 1));
+            report.getCountOfSoldProductsInEachDay().put(product.getDate(), (report.getCountOfSoldProductsInEachDay().get(product.getDate()) + 1));
         }
     }
 

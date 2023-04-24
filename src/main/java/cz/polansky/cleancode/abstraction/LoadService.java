@@ -3,12 +3,15 @@ package cz.polansky.cleancode.abstraction;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static cz.polansky.cleancode.abstraction.Link.*;
 import static org.springframework.util.CollectionUtils.isEmpty;
@@ -22,6 +25,7 @@ public class LoadService {
     private FormatService formatService;
     private ErrorReportingService errorReportingService;
     private Dao dao;
+    private MonitoringService monitoringService;
 
     private final static String INVALID_CHAR = "@&?";
 
@@ -32,10 +36,21 @@ public class LoadService {
                         && (client.getTimeRange().getTo().equals(now) || client.getTimeRange().getTo().isAfter(now)))
                 .forEach(client -> {
                     List<Error> errors = new ArrayList<>();
+                    final AtomicInteger counter = new AtomicInteger();
                     Formatter formatter = formatService.getFormatter(client.getFormat());
                     ftpClient.listFiles(client.getRemoteDirectory()).stream()
                             .filter(file -> !file.isDirectory())
-                            .map(file -> csvReader.readContent(client.isContainsHeader(), file))
+                            .map(file -> {
+                                try {
+                                    return Files.readAllLines(file.toPath());
+                                } catch (IOException e) {
+                                    errors.add(new Error("Cannot read from file...."));
+                                    return null;
+                                }
+                            })
+                            .filter(Objects::nonNull)
+                            .map(lines -> csvReader.readContent(client.isContainsHeader(), lines))
+                            .flatMap(Collection::stream)
                             .peek(content -> {
                                 if (!content.startsWith(client.getFormat().prefix) || content.contains(INVALID_CHAR)) {
                                     errors.add(new Error("invalid Content...."));
@@ -61,10 +76,13 @@ public class LoadService {
                                 }
                             })
                             .filter(Objects::nonNull)
-                            .forEach(publication -> dao.persist(publication));
+                            .forEach(publication -> {
+                                dao.persist(publication);
+                                counter.incrementAndGet();
+                            });
 
                     errorReportingService.sendErrorReport(client, errors);
-
+                    monitoringService.record(client, counter.get());
                 });
     }
 }

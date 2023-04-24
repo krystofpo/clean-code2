@@ -6,5 +6,7 @@ import java.util.List;
 
 @Service
 public class ErrorReportingService {
-    public void sendErrorReport(Client client, List<Error> errors)
+    public void sendErrorReport(Client client, List<Error> errors) {
+
+    }
 }

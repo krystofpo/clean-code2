@@ -1,11 +1,7 @@
 package cz.polansky.cleancode.naming;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ReportService {
 
@@ -30,7 +26,7 @@ public class ReportService {
                         product.getDate().toLocalTime().isBefore(LocalTime.of(14,0))){
                     if (product.getProductId().equals("menu1445") || product.getProductId().equals("drink1620")
                     || product.getProductId().equals("menu1321")){
-                        if (!report.getItems().containsKey(product.getDate())){
+                        if (!report.getItems().containsKey(product.getDate())) {
                             report.getItems().put(product.getDate(), 1);
                         } else {
                             report.getItems().put(product.getDate(), (report.getItems().get(product.getDate()) + 1));
@@ -40,10 +36,9 @@ public class ReportService {
             }
 
         }
-        Map<LocalDateTime,Integer> newItems = report.getItems().entrySet().stream()
-                .filter(entry -> entry.getValue() > 5) //TODO ta petka co je za magickou knoinstantu
-                .collect(Collectors.toMap());
-        report.setItems(newItems); //TODO pojmenovani newItems je nicnerikajici
+        report.getItems().entrySet().stream()
+                .filter(entry -> entry.getValue() < 5)
+                .forEach(entry -> report.getItems().remove(entry.getKey()));
         return report;
     }
 }

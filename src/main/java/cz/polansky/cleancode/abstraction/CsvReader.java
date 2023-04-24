@@ -2,12 +2,13 @@ package cz.polansky.cleancode.abstraction;
 
 import org.springframework.stereotype.Component;
 
-import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class CsvReader {
 
-    public String readContent(boolean containsHeader, File file){
-        return "xxxx";
+    public List<String> readContent(boolean containsHeader, List<String> lines) {
+        return new ArrayList<>();
     }
 }
