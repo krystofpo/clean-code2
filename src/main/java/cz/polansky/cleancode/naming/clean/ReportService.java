@@ -61,10 +61,12 @@ public class ReportService {
     }
 
     private boolean isOneOfWeekendDiscountedProducts(String productId) {
-        //TODO
+        return productId.equals(hamburger) || productId.equals(pizza)
+                || productId.equals(juice);
     }
 
     private boolean wasSoldDuringWeekendHappyHour(Product product) {
-        return false; //TODO
+        return product.getDate().toLocalTime().isAfter(weekendHappyHourStart) &&
+                product.getDate().toLocalTime().isBefore(weekendHappyHourEnd);
     }
 }

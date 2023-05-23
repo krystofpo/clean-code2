@@ -10,9 +10,9 @@ public class ItemComparator implements Comparator<Item> {
 
 
     private final Map<Class, Integer> orderOfItems = Map.ofEntries(
-            Map.entry(Book.class, 3),
-            Map.entry(Magazine.class, 1),
-            Map.entry(Cd.class, 3)
+            Map.entry(Book.class, 1),
+            Map.entry(Magazine.class, 5),
+            Map.entry(Cd.class, 5),
             Map.entry(XXX.class, 3)
     );
 
